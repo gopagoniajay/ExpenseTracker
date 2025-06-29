@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Expense Tracker Pro</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    body {
+      font-family: 'Montserrat', Arial, sans-serif;
+      background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+      margin: 0;
+      min-height: 100vh;
+    }
+    .container {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 4px 24px rgba(44,62,80,0.12);
+      padding: 32px 24px 24px 24px;
+      max-width: 540px;
+      width: 100%;
+      margin: 48px auto;
+      transition: box-shadow 0.3s;
+    }
+    h2 {
+      text-align: center;
+      color: #2d4059;
+      margin-bottom: 24px;
+      letter-spacing: 2px;
+    }
+    .toggle-btns {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .toggle-btns button {
+      background: linear-gradient(90deg, #43cea2 0%, #185a9d 100%);
+      color: #fff;
+      padding: 8px 32px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1em;
+      box-shadow: 0 2px 8px rgba(44,62,80,0.10);
+      transition: background 0.2s, color 0.2s;
+      outline: none;
+    }
+    .toggle-btns button.active {
+      background: linear-gradient(90deg, #ff512f 0%, #dd2476 100%);
+      color: #fff;
+    }
+    .hidden { display: none; }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 0;
+    }
+    input, select, button {
+      padding: 12px;
+      border-radius: 7px;
+      border: 1px solid #e0e0e0;
+      font-size: 1em;
+      background: #f8fafc;
+      transition: border 0.2s;
+    }
+    input:focus, select:focus {
+      border: 1.5px solid #43cea2;
+      outline: none;
+    }
+    button {
+      background: linear-gradient(90deg, #43cea2 0%, #185a9d 100%);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1em;
+      transition: background 0.2s;
+      margin-top: 6px;
+    }
+    button:hover {
+      background: linear-gradient(90deg, #ff512f 0%, #dd2476 100%);
+    }
+    .logout-btn {
+      background: linear-gradient(90deg, #ff512f 0%, #dd2476 100%);
+      margin-top: 20px;
+    }
+    .error {
+      color: #e74c3c;
+      font-size: 0.95em;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .dashboard {
+      margin: 24px 0 16px 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: center;
+    }
+    .dashboard-card {
+      flex: 1 1 210px;
+      background: linear-gradient(120deg, #43cea2 0%, #185a9d 100%);
+      color: #fff;
+      border-radius: 12px;
+      padding: 20px 14px;
+      min-width: 160px;
+      box-shadow: 0 2px 8px rgba(44,62,80,0.10);
+      text-align: center;
+      font-size: 1.1em;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      transition: transform 0.2s;
+      gap: 6px;
+    }
+    .dashboard-card i {
+      font-size: 2em;
+      margin-bottom: 4px;
+      opacity: 0.85;
+    }
+    .dashboard-card span {
+      font-size: 1.6em;
+      font-weight: bold;
+      margin: 2px 0 0 0;
+      letter-spacing: 1px;
+    }
+    .dashboard-card.topcat {
+      background: linear-gradient(120deg, #ff512f 0%, #dd2476 100%);
+    }
+    .dashboard-card.thismonth {
+      background: linear-gradient(120deg, #36d1c4 0%, #5b86e5 100%);
+    }
+    .dashboard-card.prevmonth {
+      background: linear-gradient(120deg, #fc5c7d 0%, #6a82fb 100%);
+    }
+    .dashboard-card:hover {
+      transform: translateY(-4px) scale(1.03);
+      box-shadow: 0 6px 24px rgba(44,62,80,0.13);
+    }
+    .filter-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+    .filter-row select {
+      background: #f5f7fa;
+      border: 1px solid #e0e0e0;
+      font-size: 1em;
+      padding: 7px 14px;
+      border-radius: 6px;
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: #f7fafc;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+      font-size: 1em;
+    }
+    th {
+      background: linear-gradient(90deg, #43cea2 0%, #185a9d 100%);
+      color: #fff;
+      border: none;
+    }
+    tr:nth-child(even) { background: #f4f6fb; }
+    .delete-btn {
+      background: linear-gradient(90deg, #ff512f 0%, #dd2476 100%);
+      color: #fff;
+      border: none;
+      padding: 4px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.95em;
+    }
+    .receipt-img {
+      width: 38px;
+      height: 38px;
+      object-fit: cover;
+      border-radius: 3px;
+      box-shadow: 0 1px 4px rgba(44,62,80,0.10);
+    }
+    .chart-container {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(44,62,80,0.08);
+      padding: 18px 8px 8px 8px;
+      margin-bottom: 10px;
+    }
+    /* Login/Register/Profile Styling */
+    .auth-form, .profile-form {
+      background: linear-gradient(120deg, #43cea2 0%, #185a9d 100%);
+      border-radius: 14px;
+      padding: 28px 18px 18px 18px;
+      box-shadow: 0 2px 8px rgba(44,62,80,0.10);
+      margin-bottom: 18px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+      animation: fadeIn 0.7s;
+      max-width: 420px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .auth-form input, .profile-form input, .profile-form select {
+      background: #fff;
+      color: #333;
+      border: none;
+      margin-bottom: 10px;
+    }
+    .auth-form h2, .profile-form h2 {
+      color: #fff;
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+    }
+    .auth-form .switch-link {
+      text-align: center;
+      margin-top: 8px;
+      color: #fff;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 0.98em;
+      opacity: 0.9;
+    }
+    .profile-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.4em;
+      color: #fff;
+      margin: 0 auto 12px auto;
+      box-shadow: 0 2px 8px rgba(44,62,80,0.11);
+    }
+    .profile-form label {
+      font-size: 1em;
+      margin-bottom: 2px;
+      color: #fff;
+      font-weight: 500;
+    }
+    .profile-form .profile-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+      justify-content: center;
+    }
+    .profile-form .profile-actions button {
+      margin-top: 0;
+      padding: 10px 18px;
+      font-size: 1em;
+    }
+    .profile-form .change-pw-link {
+      text-align: center;
+      margin-top: 10px;
+      color: #fff;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 0.98em;
+      opacity: 0.9;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    @media (max-width: 700px) {
+      .container { padding: 8px; }
+      .dashboard { flex-direction: column; gap: 12px;}
+      .dashboard-card { min-width: 0; }
+      th, td { font-size: 0.97em;}
+      .auth-form, .profile-form { padding: 18px 6px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="toggle-btns">
+      <button id="btn-login" class="active">Login</button>
+      <button id="btn-register">Register</button>
+      <button id="btn-profile" class="hidden">Profile</button>
+    </div>
+
+    <!-- Login Form -->
+    <form id="login-form" class="auth-form">
+      <h2><i class="fa fa-sign-in-alt"></i> Login</h2>
+      <div class="error" id="login-error"></div>
+      <input type="text" id="login-username" placeholder="Username" required autocomplete="username" />
+      <input type="password" id="login-password" placeholder="Password" required autocomplete="current-password" />
+      <button type="submit">Login</button>
+      <div class="switch-link" id="to-register">Don't have an account? Register</div>
+    </form>
+
+    <!-- Register Form -->
+    <form id="register-form" class="auth-form hidden">
+      <h2><i class="fa fa-user-plus"></i> Register</h2>
+      <div class="error" id="register-error"></div>
+      <input type="text" id="register-username" placeholder="Unique Username (min 6 chars, letters/numbers)" required autocomplete="username" />
+      <input type="password" id="register-password" placeholder="Password (min 8 chars, upper/lower/number/symbol)" required autocomplete="new-password" />
+      <input type="password" id="register-password-confirm" placeholder="Confirm Password" required autocomplete="new-password" />
+      <input type="text" id="register-name" placeholder="Full Name" required />
+      <input type="email" id="register-email" placeholder="Email" required />
+      <input type="tel" id="register-phone" placeholder="Phone" required pattern="[0-9]{10,}" />
+      <input type="date" id="register-dob" placeholder="Date of Birth" required />
+      <select id="register-gender" required>
+        <option value="">Select Gender</option>
+        <option>Male</option>
+        <option>Female</option>
+        <option>Other</option>
+      </select>
+      <button type="submit">Register</button>
+      <div class="switch-link" id="to-login">Already have an account? Login</div>
+    </form>
+
+    <!-- Profile Form -->
+    <form id="profile-form" class="profile-form hidden">
+      <div class="profile-avatar"><i class="fa fa-user"></i></div>
+      <h2>My Profile</h2>
+      <div class="error" id="profile-error"></div>
+      <label>Name</label>
+      <input type="text" id="profile-name" required />
+      <label>Email</label>
+      <input type="email" id="profile-email" required />
+      <label>Phone</label>
+      <input type="tel" id="profile-phone" required pattern="[0-9]{10,}" />
+      <label>Date of Birth</label>
+      <input type="date" id="profile-dob" required />
+      <label>Gender</label>
+      <select id="profile-gender" required>
+        <option>Male</option>
+        <option>Female</option>
+        <option>Other</option>
+      </select>
+      <div class="profile-actions">
+        <button type="submit">Update Profile</button>
+        <button type="button" id="profile-logout">Logout</button>
+      </div>
+      <div class="change-pw-link" id="to-change-password">Change Password</div>
+    </form>
+
+    <!-- Change Password Form -->
+    <form id="change-password-form" class="profile-form hidden">
+      <h2>Change Password</h2>
+      <div class="error" id="change-password-error"></div>
+      <input type="password" id="old-password" placeholder="Old Password" required />
+      <input type="password" id="new-password" placeholder="New Password (min 8 chars, upper/lower/number/symbol)" required />
+      <input type="password" id="new-password-confirm" placeholder="Confirm New Password" required />
+      <div class="profile-actions">
+        <button type="submit">Update Password</button>
+        <button type="button" id="cancel-change-pw">Cancel</button>
+      </div>
+    </form>
+
+    <!-- Expense Tracker -->
+    <div id="expense-section" class="hidden">
+      <h2>Expense Tracker</h2>
+      <div class="dashboard" id="dashboard-cards"></div>
+      <div class="chart-container">
+        <canvas id="expenseChart" height="100"></canvas>
+      </div>
+      <div class="filter-row">
+        <label for="month-filter" style="font-size:1em;">Show:</label>
+        <select id="month-filter">
+          <option value="current">This Month</option>
+          <option value="previous">Previous Month</option>
+          <option value="all">All</option>
+        </select>
+        <button id="goto-profile" title="Profile" style="background:linear-gradient(90deg,#ff512f,#dd2476);color:#fff;border:none;padding:7px 14px;border-radius:6px;margin-left:8px;"><i class="fa fa-user"></i></button>
+      </div>
+      <form id="expense-form" autocomplete="off" style="margin-bottom:10px;">
+        <input type="text" id="desc" placeholder="Expense description" required />
+        <input type="number" id="amt" placeholder="Amount (₹)" required min="0.01" step="0.01" />
+        <select id="category" required>
+          <option value="">Select category</option>
+          <option>Food</option>
+          <option>Travel</option>
+          <option>Bills</option>
+          <option>Shopping</option>
+          <option>Entertainment</option>
+          <option>Other</option>
+        </select>
+        <input type="date" id="date" required />
+        <input type="file" id="receipt" accept="image/*" />
+        <button type="submit">Add Expense</button>
+      </form>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Desc</th>
+            <th>₹</th>
+            <th>Cat</th>
+            <th>Receipt</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="expense-list"></tbody>
+      </table>
+      <button class="logout-btn" id="logout-btn">Logout</button>
+    </div>
+  </div>
+
+<script>
+  // Elements
+  const btnLogin = document.getElementById('btn-login');
+  const btnRegister = document.getElementById('btn-register');
+  const btnProfile = document.getElementById('btn-profile');
+  const loginForm = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
+  const expenseSection = document.getElementById('expense-section');
+  const loginError = document.getElementById('login-error');
+  const registerError = document.getElementById('register-error');
+  const logoutBtn = document.getElementById('logout-btn');
+  const toRegister = document.getElementById('to-register');
+  const toLogin = document.getElementById('to-login');
+  const dashboardCards = document.getElementById('dashboard-cards');
+  const monthFilter = document.getElementById('month-filter');
+  const profileForm = document.getElementById('profile-form');
+  const profileError = document.getElementById('profile-error');
+  const profileLogout = document.getElementById('profile-logout');
+  const gotoProfile = document.getElementById('goto-profile');
+  const toChangePw = document.getElementById('to-change-password');
+  const changePwForm = document.getElementById('change-password-form');
+  const changePwError = document.getElementById('change-password-error');
+  const cancelChangePw = document.getElementById('cancel-change-pw');
+
+  // Toggle forms
+  function showLogin() {
+    btnLogin.classList.add('active');
+    btnRegister.classList.remove('active');
+    btnProfile.classList.add('hidden');
+    loginForm.classList.remove('hidden');
+    registerForm.classList.add('hidden');
+    expenseSection.classList.add('hidden');
+    profileForm.classList.add('hidden');
+    changePwForm.classList.add('hidden');
+    clearErrors();
+  }
+  function showRegister() {
+    btnRegister.classList.add('active');
+    btnLogin.classList.remove('active');
+    btnProfile.classList.add('hidden');
+    registerForm.classList.remove('hidden');
+    loginForm.classList.add('hidden');
+    expenseSection.classList.add('hidden');
+    profileForm.classList.add('hidden');
+    changePwForm.classList.add('hidden');
+    clearErrors();
+  }
+  function showProfile() {
+    btnProfile.classList.add('active');
+    btnLogin.classList.remove('active');
+    btnRegister.classList.remove('active');
+    profileForm.classList.remove('hidden');
+    loginForm.classList.add('hidden');
+    registerForm.classList.add('hidden');
+    expenseSection.classList.add('hidden');
+    changePwForm.classList.add('hidden');
+    clearErrors();
+    loadProfile();
+  }
+  function showChangePw() {
+    changePwForm.classList.remove('hidden');
+    profileForm.classList.add('hidden');
+    clearErrors();
+    changePwForm.reset();
+  }
+  function showExpenseTracker() {
+    loginForm.classList.add('hidden');
+    registerForm.classList.add('hidden');
+    expenseSection.classList.remove('hidden');
+    profileForm.classList.add('hidden');
+    changePwForm.classList.add('hidden');
+    btnLogin.classList.remove('active');
+    btnRegister.classList.remove('active');
+    btnProfile.classList.remove('active');
+    btnProfile.classList.remove('hidden');
+    dateInput.value = new Date().toISOString().slice(0,10);
+    renderExpenses();
+  }
+  btnLogin.onclick = showLogin;
+  btnRegister.onclick = showRegister;
+  toRegister.onclick = showRegister;
+  toLogin.onclick = showLogin;
+  btnProfile.onclick = showProfile;
+  gotoProfile.onclick = showProfile;
+  toChangePw.onclick = showChangePw;
+  cancelChangePw.onclick = showProfile;
+
+  function clearErrors() { loginError.textContent = ''; registerError.textContent = ''; profileError.textContent = ''; changePwError.textContent = ''; }
+
+  // User data in localStorage key 'users' as array of {username, password, name, email, phone, dob, gender}
+  function getUsers() { return JSON.parse(localStorage.getItem('users') || '[]'); }
+  function saveUsers(users) { localStorage.setItem('users', JSON.stringify(users)); }
+  function getUser(username) { return getUsers().find(u => u.username === username); }
+  function updateUser(username, data) {
+    let users = getUsers();
+    let idx = users.findIndex(u => u.username === username);
+    if (idx > -1) {
+      users[idx] = {...users[idx], ...data};
+      saveUsers(users);
+    }
+  }
+
+  // Current logged in user stored in sessionStorage
+  function setCurrentUser(username) { sessionStorage.setItem('currentUser', username); }
+  function getCurrentUser() { return sessionStorage.getItem('currentUser'); }
+  function clearCurrentUser() { sessionStorage.removeItem('currentUser'); }
+
+  // Username & password validation
+  function isValidUsername(username) {
+    // Unique, min 6 chars, only letters/numbers, not email, not personal info
+    return /^[A-Za-z0-9]{6,}$/.test(username) && !username.includes('@');
+  }
+  function isStrongPassword(pw) {
+    // Min 8 chars, upper, lower, number, symbol
+    return /^(?=.[a-z])(?=.[A-Z])(?=.\d)(?=.[^A-Za-z0-9]).{8,}$/.test(pw);
+  }
+
+  // Register form submit
+  registerForm.addEventListener('submit', e => {
+    e.preventDefault();
+    clearErrors();
+    const username = document.getElementById('register-username').value.trim();
+    const password = document.getElementById('register-password').value;
+    const passwordConfirm = document.getElementById('register-password-confirm').value;
+    const name = document.getElementById('register-name').value.trim();
+    const email = document.getElementById('register-email').value.trim();
+    const phone = document.getElementById('register-phone').value.trim();
+    const dob = document.getElementById('register-dob').value;
+    const gender = document.getElementById('register-gender').value;
+    if (!isValidUsername(username)) {
+      registerError.textContent = 'Username must be unique, min 6 chars, only letters/numbers, not email.';
+      return;
+    }
+    if (getUsers().find(u => u.username === username)) {
+      registerError.textContent = 'Username already exists.';
+      return;
+    }
+    if (!isStrongPassword(password)) {
+      registerError.textContent = 'Password must be 8+ chars, upper/lower/number/symbol.';
+      return;
+    }
+    if (password !== passwordConfirm) {
+      registerError.textContent = 'Passwords do not match.';
+      return;
+    }
+    if (!name || !email || !phone || !dob || !gender) {
+      registerError.textContent = 'All fields are required.';
+      return;
+    }
+    getUsers().push; // for code completion
+    let users = getUsers();
+    users.push({ username, password, name, email, phone, dob, gender });
+    saveUsers(users);
+    alert('Registration successful! Please log in.');
+    registerForm.reset();
+    showLogin();
+  });
+
+  // Login form submit
+  loginForm.addEventListener('submit', e => {
+    e.preventDefault();
+    clearErrors();
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    let user = getUsers().find(u => u.username === username && u.password === password);
+    if (!user) { loginError.textContent = 'Invalid username or password.'; return; }
+    setCurrentUser(user.username);
+    loginForm.reset();
+    showExpenseTracker();
+  });
+
+  // Profile logic
+  function loadProfile() {
+    const user = getUser(getCurrentUser());
+    if (!user) return;
+    document.getElementById('profile-name').value = user.name || '';
+    document.getElementById('profile-email').value = user.email || '';
+    document.getElementById('profile-phone').value = user.phone || '';
+    document.getElementById('profile-dob').value = user.dob || '';
+    document.getElementById('profile-gender').value = user.gender || 'Male';
+  }
+  profileForm.addEventListener('submit', e => {
+    e.preventDefault();
+    clearErrors();
+    const name = document.getElementById('profile-name').value.trim();
+    const email = document.getElementById('profile-email').value.trim();
+    const phone = document.getElementById('profile-phone').value.trim();
+    const dob = document.getElementById('profile-dob').value;
+    const gender = document.getElementById('profile-gender').value;
+    if (!name || !email || !phone || !dob || !gender) {
+      profileError.textContent = 'All fields are required.';
+      return;
+    }
+    updateUser(getCurrentUser(), { name, email, phone, dob, gender });
+    profileError.textContent = 'Profile updated!';
+    setTimeout(()=>{ profileError.textContent = ''; }, 1500);
+  });
+  profileLogout.onclick = () => { clearCurrentUser(); showLogin(); };
+
+  // Change password logic
+  changePwForm.addEventListener('submit', e => {
+    e.preventDefault();
+    clearErrors();
+    const oldPw = document.getElementById('old-password').value;
+    const newPw = document.getElementById('new-password').value;
+    const newPwC = document.getElementById('new-password-confirm').value;
+    const user = getUser(getCurrentUser());
+    if (!user) return;
+    if (user.password !== oldPw) {
+      changePwError.textContent = 'Old password is incorrect.';
+      return;
+    }
+    if (!isStrongPassword(newPw)) {
+      changePwError.textContent = 'Password must be 8+ chars, upper/lower/number/symbol.';
+      return;
+    }
+    if (newPw !== newPwC) {
+      changePwError.textContent = 'Passwords do not match.';
+      return;
+    }
+    updateUser(getCurrentUser(), { password: newPw });
+    changePwError.textContent = 'Password updated!';
+    setTimeout(()=>{ showProfile(); }, 1200);
+  });
+
+  // Expense tracker logic
+  const expenseForm = document.getElementById('expense-form');
+  const descInput = document.getElementById('desc');
+  const amtInput = document.getElementById('amt');
+  const catInput = document.getElementById('category');
+  const dateInput = document.getElementById('date');
+  const receiptInput = document.getElementById('receipt');
+  const expenseList = document.getElementById('expense-list');
+  let chart;
+
+  function getExpenses(username) {
+    return JSON.parse(localStorage.getItem('expenses_' + username) || '[]');
+  }
+  function saveExpenses(username, expenses) {
+    localStorage.setItem('expenses_' + username, JSON.stringify(expenses));
+  }
+
+  function getMonthYear(dateStr) {
+    const d = new Date(dateStr);
+    return [d.getFullYear(), d.getMonth()];
+  }
+  function getCurrentMonthYear() {
+    const d = new Date();
+    return [d.getFullYear(), d.getMonth()];
+  }
+  function getPreviousMonthYear() {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 1);
+    return [d.getFullYear(), d.getMonth()];
+  }
+
+  function filterExpensesByMonth(expenses, filter) {
+    if (filter === "all") return expenses;
+    let [year, month] = filter === "current" ? getCurrentMonthYear() : getPreviousMonthYear();
+    return expenses.filter(e => {
+      if (!e.date) return false;
+      let [eyear, emonth] = getMonthYear(e.date);
+      return eyear === year && emonth === month;
+    });
+  }
+
+  function renderDashboard(expenses) {
+    const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const thisMonthExpenses = filterExpensesByMonth(expenses, "current");
+    const prevMonthExpenses = filterExpensesByMonth(expenses, "previous");
+    const thisMonthTotal = thisMonthExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const prevMonthTotal = prevMonthExpenses.reduce((sum, e) => sum + e.amount, 0);
+
+    // Top category this month
+    let topCat = "";
+    if (thisMonthExpenses.length) {
+      let catMap = {};
+      thisMonthExpenses.forEach(e => catMap[e.category] = (catMap[e.category] || 0) + e.amount);
+      topCat = Object.entries(catMap).sort((a,b)=>b[1]-a[1])[0][0];
+    }
+
+    dashboardCards.innerHTML = `
+      <div class="dashboard-card"><i class="fa fa-wallet"></i>
+        <div>Total Expenses</div>
+        <span>₹${total.toFixed(2)}</span>
+      </div>
+      <div class="dashboard-card thismonth"><i class="fa fa-calendar"></i>
+        <div>This Month</div>
+        <span>₹${thisMonthTotal.toFixed(2)}</span>
+      </div>
+      <div class="dashboard-card prevmonth"><i class="fa fa-calendar-minus"></i>
+        <div>Prev. Month</div>
+        <span>₹${prevMonthTotal.toFixed(2)}</span>
+      </div>
+      <div class="dashboard-card topcat"><i class="fa fa-chart-pie"></i>
+        <div>Top Category</div>
+        <span>${topCat || '-'}</span>
+      </div>
+    `;
+  }
+
+  function renderExpenses() {
+    const username = getCurrentUser();
+    if (!username) return;
+    const allExpenses = getExpenses(username);
+    const filter = monthFilter.value;
+    const expenses = filterExpensesByMonth(allExpenses, filter);
+    expenseList.innerHTML = '';
+    expenses.forEach((e, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${e.date || ''}</td>
+        <td>${e.desc}</td>
+        <td>₹${e.amount.toFixed(2)}</td>
+        <td>${e.category || ''}</td>
+        <td>${e.receipt ? <img src="${e.receipt}" class="receipt-img" title="Receipt" /> : ''}</td>
+        <td><button class="delete-btn" onclick="deleteExpense(${i})">Delete</button></td>
+      `;
+      expenseList.appendChild(tr);
+    });
+    renderDashboard(allExpenses);
+    renderChart(allExpenses, filter);
+  }
+
+  expenseForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const desc = descInput.value.trim();
+    const amount = parseFloat(amtInput.value);
+    const category = catInput.value;
+    const date = dateInput.value;
+    let receipt = '';
+    if (receiptInput.files && receiptInput.files[0]) {
+      receipt = await fileToBase64(receiptInput.files[0]);
+    }
+    if (!desc || isNaN(amount) || amount <= 0 || !category || !date) return alert('Please fill all fields.');
+    const username = getCurrentUser();
+    if (!username) return;
+    const expenses = getExpenses(username);
+    expenses.push({ desc, amount, category, date, receipt });
+    saveExpenses(username, expenses);
+    expenseForm.reset();
+    renderExpenses();
+  });
+
+  function fileToBase64(file) {
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Delete expense by index (in filtered list)
+  window.deleteExpense = function(index) {
+    const username = getCurrentUser();
+    if (!username) return;
+    let allExpenses = getExpenses(username);
+    const filter = monthFilter.value;
+    const filtered = filterExpensesByMonth(allExpenses, filter);
+    const expToDelete = filtered[index];
+    // Remove the first matching expense from allExpenses
+    let idx = allExpenses.findIndex(e => e === expToDelete);
+    if (idx > -1) {
+      allExpenses.splice(idx, 1);
+      saveExpenses(username, allExpenses);
+      renderExpenses();
+    }
+  };
+
+  // Chart rendering
+  function renderChart(allExpenses, filter) {
+    const ctx = document.getElementById('expenseChart').getContext('2d');
+    // Group by date for selected month
+    const expenses = filterExpensesByMonth(allExpenses, filter);
+    let dateMap = {};
+    expenses.forEach(e => {
+      if (!e.date) return;
+      dateMap[e.date] = (dateMap[e.date] || 0) + e.amount;
+    });
+    let dates = Object.keys(dateMap).sort();
+    let values = dates.map(d => dateMap[d]);
+    // Linear gradient for chart
+    let gradient = ctx.createLinearGradient(0, 0, 0, 180);
+    gradient.addColorStop(0, "#43cea2bb");
+    gradient.addColorStop(1, "#185a9d22");
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: dates,
+        datasets: [{
+          label: "Expenses",
+          data: values,
+          fill: true,
+          backgroundColor: gradient,
+          borderColor: "#185a9d",
+          pointBackgroundColor: "#ff512f",
+          tension: 0.35
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: { grid: { color: "#eee" }, beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  // Month filter
+  monthFilter.onchange = renderExpenses;
+
+  // Logout
+  logoutBtn.onclick = () => { clearCurrentUser(); showLogin(); };
+  // Profile logout
+  profileLogout.onclick = () => { clearCurrentUser(); showLogin(); };
+
+  // On page load, check if user logged in
+  window.onload = () => {
+    if (getCurrentUser()) {
+      showExpenseTracker();
+    } else {
+      showLogin();
+    }
+  };
+</script>
+</body>
+</html>
